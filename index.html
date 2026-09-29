@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo Filter Studio</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .editor-container {
+            width: 100%;
+            max-width: 1100px;
+            background-color: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: row;
+            min-height: 520px;
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #0b1120;
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .drop-prompt {
+            position: absolute;
+            color: #64748b;
+            font-size: 1.05rem;
+            pointer-events: none;
+            text-align: center;
+            padding: 0 16px;
+        }
+
+        .controls-panel {
+            width: 320px;
+            background-color: #1e293b;
+            padding: 24px;
+            border-left: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .file-upload-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .file-upload-btn:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+
+        .file-upload-btn input {
+            display: none;
+        }
+
+        .btn-primary {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #059669;
+        }
+
+        .btn-secondary {
+            background-color: #475569;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #334155;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        input[type="range"] {
+            accent-color: #3b82f6;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+
+            .controls-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #334155;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="editor-container">
+        <header>
+            <h2>Photo Filter Studio</h2>
+        </header>
+
+        <div class="main-layout">
+            <!-- Image Canvas Viewport -->
+            <div class="canvas-wrapper">
+                <canvas id="imageCanvas"></canvas>
+                <div id="dropPrompt" class="drop-prompt">
+                    <p>Click "Choose Image" or drop a photo here to start</p>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <aside class="controls-panel">
+                <div class="actions">
+                    <label class="btn file-upload-btn">
+                        Choose Image
+                        <input type="file" id="uploadInput" accept="image/*" />
+                    </label>
+                    <button id="downloadBtn" class="btn btn-primary" disabled>Download</button>
+                    <button id="resetBtn" class="btn btn-secondary" disabled>Reset</button>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #334155;" />
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Brightness</span>
+                        <span id="brightnessVal">100%</span>
+                    </div>
+                    <input type="range" id="brightness" min="0" max="200" value="100" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Contrast</span>
+                        <span id="contrastVal">100%</span>
+                    </div>
+                    <input type="range" id="contrast" min="0" max="200" value="100" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Saturation</span>
+                        <span id="saturationVal">100%</span>
+                    </div>
+                    <input type="range" id="saturation" min="0" max="200" value="100" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Grayscale</span>
+                        <span id="grayscaleVal">0%</span>
+                    </div>
+                    <input type="range" id="grayscale" min="0" max="100" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Sepia</span>
+                        <span id="sepiaVal">0%</span>
+                    </div>
+                    <input type="range" id="sepia" min="0" max="100" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Hue Rotate</span>
+                        <span id="hueRotateVal">0°</span>
+                    </div>
+                    <input type="range" id="hueRotate" min="0" max="360" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Blur</span>
+                        <span id="blurVal">0px</span>
+                    </div>
+                    <input type="range" id="blur" min="0" max="20" value="0" step="0.5" />
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("imageCanvas");
+        const ctx = canvas.getContext("2d");
+        const uploadInput = document.getElementById("uploadInput");
+        const downloadBtn = document.getElementById("downloadBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const dropPrompt = document.getElementById("dropPrompt");
+
+        const sliders = {
+            brightness: document.getElementById("brightness"),
+            contrast: document.getElementById("contrast"),
+            saturation: document.getElementById("saturation"),
+            grayscale: document.getElementById("grayscale"),
+            sepia: document.getElementById("sepia"),
+            hueRotate: document.getElementById("hueRotate"),
+            blur: document.getElementById("blur"),
+        };
+
+        const labels = {
+            brightness: document.getElementById("brightnessVal"),
+            contrast: document.getElementById("contrastVal"),
+            saturation: document.getElementById("saturationVal"),
+            grayscale: document.getElementById("grayscaleVal"),
+            sepia: document.getElementById("sepiaVal"),
+            hueRotate: document.getElementById("hueRotateVal"),
+            blur: document.getElementById("blurVal"),
+        };
+
+        const defaults = {
+            brightness: 100,
+            contrast: 100,
+            saturation: 100,
+            grayscale: 0,
+            sepia: 0,
+            hueRotate: 0,
+            blur: 0,
+        };
+
+        let currentImg = null;
+
+        function getFilterString() {
+            return `
+        brightness(${sliders.brightness.value}%)
+        contrast(${sliders.contrast.value}%)
+        saturate(${sliders.saturation.value}%)
+        grayscale(${sliders.grayscale.value}%)
+        sepia(${sliders.sepia.value}%)
+        hue-rotate(${sliders.hueRotate.value}deg)
+        blur(${sliders.blur.value}px)
+      `.trim();
+        }
+
+        function renderImage() {
+            if (!currentImg) return;
+
+            canvas.width = currentImg.naturalWidth;
+            canvas.height = currentImg.naturalHeight;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.filter = getFilterString();
+            ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
+        }
+
+        function loadImage(file) {
+            if (!file || !file.type.startsWith("image/")) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImg = img;
+                    dropPrompt.style.display = "none";
+                    downloadBtn.disabled = false;
+                    resetBtn.disabled = false;
+                    renderImage();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        Object.keys(sliders).forEach((key) => {
+            sliders[key].addEventListener("input", (e) => {
+                const val = e.target.value;
+                if (key === "hueRotate") {
+                    labels[key].innerText = `${val}°`;
+                } else if (key === "blur") {
+                    labels[key].innerText = `${val}px`;
+                } else {
+                    labels[key].innerText = `${val}%`;
+                }
+                renderImage();
+            });
+        });
+
+        uploadInput.addEventListener("change", (e) => {
+            loadImage(e.target.files[0]);
+        });
+
+        resetBtn.addEventListener("click", () => {
+            Object.keys(sliders).forEach((key) => {
+                sliders[key].value = defaults[key];
+                if (key === "hueRotate") labels[key].innerText = `${defaults[key]}°`;
+                else if (key === "blur") labels[key].innerText = `${defaults[key]}px`;
+                else labels[key].innerText = `${defaults[key]}%`;
+            });
+            renderImage();
+        });
+
+        downloadBtn.addEventListener("click", () => {
+            if (!currentImg) return;
+            const imageURL = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.download = "edited-photo.png";
+            link.href = imageURL;
+            link.click();
+        });
+
+        const wrapper = document.querySelector(".canvas-wrapper");
+        wrapper.addEventListener("dragover", (e) => e.preventDefault());
+        wrapper.addEventListener("drop", (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                loadImage(e.dataTransfer.files[0]);
+            }
+        });
+    </script>
+</body>
+
+</html>

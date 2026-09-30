@@ -72,7 +72,9 @@
         }
 
         .controls-panel {
-            width: 320px;
+            width: 340px;
+            max-height: 600px;
+            overflow-y: auto;
             background-color: #1e293b;
             padding: 24px;
             border-left: 1px solid #334155;
@@ -136,6 +138,15 @@
             background-color: #334155;
         }
 
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
         .slider-group {
             display: flex;
             flex-direction: column;
@@ -161,6 +172,7 @@
 
             .controls-panel {
                 width: 100%;
+                max-height: none;
                 border-left: none;
                 border-top: 1px solid #334155;
             }
@@ -191,10 +203,46 @@
                         <input type="file" id="uploadInput" accept="image/*" />
                     </label>
                     <button id="downloadBtn" class="btn btn-primary" disabled>Download</button>
-                    <button id="resetBtn" class="btn btn-secondary" disabled>Reset</button>
+                    <button id="resetBtn" class="btn btn-secondary" disabled>Reset All</button>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid #334155;" />
+
+                <div class="section-title">Enhancements</div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>HDR Effect</span>
+                        <span id="hdrVal">0%</span>
+                    </div>
+                    <input type="range" id="hdr" min="0" max="100" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Sharpen</span>
+                        <span id="sharpenVal">0%</span>
+                    </div>
+                    <input type="range" id="sharpen" min="0" max="100" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Vibrance</span>
+                        <span id="vibranceVal">0%</span>
+                    </div>
+                    <input type="range" id="vibrance" min="-100" max="100" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Vignette</span>
+                        <span id="vignetteVal">0%</span>
+                    </div>
+                    <input type="range" id="vignette" min="0" max="100" value="0" />
+                </div>
+
+                <div class="section-title">Color Adjustments</div>
 
                 <div class="slider-group">
                     <div class="slider-label">
@@ -271,6 +319,10 @@
             sepia: document.getElementById("sepia"),
             hueRotate: document.getElementById("hueRotate"),
             blur: document.getElementById("blur"),
+            hdr: document.getElementById("hdr"),
+            sharpen: document.getElementById("sharpen"),
+            vibrance: document.getElementById("vibrance"),
+            vignette: document.getElementById("vignette"),
         };
 
         const labels = {
@@ -281,6 +333,10 @@
             sepia: document.getElementById("sepiaVal"),
             hueRotate: document.getElementById("hueRotateVal"),
             blur: document.getElementById("blurVal"),
+            hdr: document.getElementById("hdrVal"),
+            sharpen: document.getElementById("sharpenVal"),
+            vibrance: document.getElementById("vibranceVal"),
+            vignette: document.getElementById("vignetteVal"),
         };
 
         const defaults = {
@@ -291,31 +347,165 @@
             sepia: 0,
             hueRotate: 0,
             blur: 0,
+            hdr: 0,
+            sharpen: 0,
+            vibrance: 0,
+            vignette: 0,
         };
 
         let currentImg = null;
 
         function getFilterString() {
             return `
-        brightness(${sliders.brightness.value}%)
-        contrast(${sliders.contrast.value}%)
-        saturate(${sliders.saturation.value}%)
-        grayscale(${sliders.grayscale.value}%)
-        sepia(${sliders.sepia.value}%)
-        hue-rotate(${sliders.hueRotate.value}deg)
-        blur(${sliders.blur.value}px)
-      `.trim();
+                brightness(${sliders.brightness.value}%)
+                contrast(${sliders.contrast.value}%)
+                saturate(${sliders.saturation.value}%)
+                grayscale(${sliders.grayscale.value}%)
+                sepia(${sliders.sepia.value}%)
+                hue-rotate(${sliders.hueRotate.value}deg)
+                blur(${sliders.blur.value}px)
+            `.trim();
         }
 
+        // 1. Dynamic Tone Mapping (HDR)
+        function applyHDR(data, amount) {
+            if (amount <= 0) return;
+            const factor = amount / 100;
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+
+                let lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                let shadowBoost = Math.sin((lum / 255) * Math.PI) * 70 * factor;
+
+                let boostR = r + shadowBoost;
+                let boostG = g + shadowBoost;
+                let boostB = b + shadowBoost;
+
+                let max = Math.max(r, g, b);
+                let min = Math.min(r, g, b);
+                let satFactor = (1 - (max - min) / 255) * 0.4 * factor;
+
+                data[i] = Math.min(255, Math.max(0, boostR + (boostR - lum) * satFactor));
+                data[i + 1] = Math.min(255, Math.max(0, boostG + (boostG - lum) * satFactor));
+                data[i + 2] = Math.min(255, Math.max(0, boostB + (boostB - lum) * satFactor));
+            }
+        }
+
+        // 2. Selective Vibrance
+        function applyVibrance(data, amount) {
+            if (amount === 0) return;
+            const factor = amount / 100;
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+
+                let max = Math.max(r, g, b);
+                let avg = (r + g + b) / 3;
+                let amt = ((Math.abs(max - avg) * 2) / 255) * factor;
+
+                if (factor > 0) {
+                    data[i] += (max - r) * amt;
+                    data[i + 1] += (max - g) * amt;
+                    data[i + 2] += (max - b) * amt;
+                } else {
+                    data[i] += (avg - r) * -amt;
+                    data[i + 1] += (avg - g) * -amt;
+                    data[i + 2] += (avg - b) * -amt;
+                }
+            }
+        }
+
+        // 3. Fast Edge Sharpening (Convolution Kernel)
+        function applySharpen(ctx, width, height, amount) {
+            if (amount <= 0) return;
+            const strength = (amount / 100) * 1.5;
+
+            const weights = [
+                0, -strength, 0,
+                -strength, 4 * strength + 1, -strength,
+                0, -strength, 0
+            ];
+
+            const input = ctx.getImageData(0, 0, width, height);
+            const src = input.data;
+            const output = ctx.createImageData(width, height);
+            const dst = output.data;
+
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    let dstIdx = (y * width + x) * 4;
+                    let r = 0, g = 0, b = 0;
+
+                    for (let cy = -1; cy <= 1; cy++) {
+                        for (let cx = -1; cx <= 1; cx++) {
+                            let srcIdx = ((y + cy) * width + (x + cx)) * 4;
+                            let w = weights[(cy + 1) * 3 + (cx + 1)];
+                            r += src[srcIdx] * w;
+                            g += src[srcIdx + 1] * w;
+                            b += src[srcIdx + 2] * w;
+                        }
+                    }
+
+                    dst[dstIdx] = Math.min(255, Math.max(0, r));
+                    dst[dstIdx + 1] = Math.min(255, Math.max(0, g));
+                    dst[dstIdx + 2] = Math.min(255, Math.max(0, b));
+                    dst[dstIdx + 3] = src[dstIdx + 3];
+                }
+            }
+
+            ctx.putImageData(output, 0, 0);
+        }
+
+        // 4. Radial Vignette Overlay
+        function applyVignette(ctx, width, height, amount) {
+            if (amount <= 0) return;
+            const radius = Math.max(width, height) / 1.5;
+            const gradient = ctx.createRadialGradient(
+                width / 2, height / 2, radius * 0.4,
+                width / 2, height / 2, radius
+            );
+
+            gradient.addColorStop(0, "rgba(0,0,0,0)");
+            gradient.addColorStop(1, `rgba(0,0,0,${(amount / 100) * 0.85})`);
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        // Pipeline render
         function renderImage() {
             if (!currentImg) return;
 
             canvas.width = currentImg.naturalWidth;
             canvas.height = currentImg.naturalHeight;
 
+            // Pass 1: Hardware-accelerated base filters
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.filter = getFilterString();
             ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
+            ctx.filter = "none";
+
+            // Pass 2: Pixel-level adjustments (HDR & Vibrance)
+            const hdrVal = parseInt(sliders.hdr.value);
+            const vibranceVal = parseInt(sliders.vibrance.value);
+
+            if (hdrVal > 0 || vibranceVal !== 0) {
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                applyHDR(imgData.data, hdrVal);
+                applyVibrance(imgData.data, vibranceVal);
+                ctx.putImageData(imgData, 0, 0);
+            }
+
+            // Pass 3: Edge Sharpening
+            applySharpen(ctx, canvas.width, canvas.height, parseInt(sliders.sharpen.value));
+
+            // Pass 4: Radial Vignette
+            applyVignette(ctx, canvas.width, canvas.height, parseInt(sliders.vignette.value));
         }
 
         function loadImage(file) {
@@ -368,7 +558,7 @@
             if (!currentImg) return;
             const imageURL = canvas.toDataURL("image/png");
             const link = document.createElement("a");
-            link.download = "edited-photo.png";
+            link.download = "enhanced-photo.png";
             link.href = imageURL;
             link.click();
         });

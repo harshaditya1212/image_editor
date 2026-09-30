@@ -4,186 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Photo Filter Studio</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .editor-container {
-            width: 100%;
-            max-width: 1100px;
-            background-color: #1e293b;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-
-        header {
-            padding: 16px 24px;
-            border-bottom: 1px solid #334155;
-        }
-
-        .main-layout {
-            display: flex;
-            flex-direction: row;
-            min-height: 520px;
-        }
-
-        .canvas-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #0b1120;
-            position: relative;
-            padding: 20px;
-            overflow: hidden;
-        }
-
-        canvas {
-            max-width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        }
-
-        .drop-prompt {
-            position: absolute;
-            color: #64748b;
-            font-size: 1.05rem;
-            pointer-events: none;
-            text-align: center;
-            padding: 0 16px;
-        }
-
-        .controls-panel {
-            width: 340px;
-            max-height: 600px;
-            overflow-y: auto;
-            background-color: #1e293b;
-            padding: 24px;
-            border-left: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .btn {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            font-size: 0.9rem;
-            transition: opacity 0.2s, background-color 0.2s;
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .file-upload-btn {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        .file-upload-btn:hover:not(:disabled) {
-            background-color: #2563eb;
-        }
-
-        .file-upload-btn input {
-            display: none;
-        }
-
-        .btn-primary {
-            background-color: #10b981;
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background-color: #059669;
-        }
-
-        .btn-secondary {
-            background-color: #475569;
-            color: white;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: #334155;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .slider-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
-
-        input[type="range"] {
-            accent-color: #3b82f6;
-            cursor: pointer;
-        }
-
-        @media (max-width: 768px) {
-            .main-layout {
-                flex-direction: column;
-            }
-
-            .controls-panel {
-                width: 100%;
-                max-height: none;
-                border-left: none;
-                border-top: 1px solid #334155;
-            }
-        }
-    </style>
+    <title>Photo Filter & Geometry Studio</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
     <div class="editor-container">
         <header>
-            <h2>Photo Filter Studio</h2>
+            <h2>Photo Filter & Geometry Studio</h2>
         </header>
 
         <div class="main-layout">
@@ -206,10 +34,37 @@
                     <button id="resetBtn" class="btn btn-secondary" disabled>Reset All</button>
                 </div>
 
-                <hr style="border: 0; border-top: 1px solid #334155;" />
+                <hr />
 
+                <!-- Orientation Controls -->
+                <div class="section-title">Orientation</div>
+                <div class="btn-grid">
+                    <button id="rotateCcwBtn" class="btn btn-secondary" disabled>Rotate ↺</button>
+                    <button id="rotateCwBtn" class="btn btn-secondary" disabled>Rotate ↻</button>
+                    <button id="flipHBtn" class="btn btn-secondary" disabled>Flip ⇋</button>
+                    <button id="flipVBtn" class="btn btn-secondary" disabled>Flip ⇅</button>
+                </div>
+
+                <!-- Perspective Controls -->
+                <div class="section-title">Perspective (Keystone)</div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Perspective X (Horizontal)</span>
+                        <span id="perspXVal">0°</span>
+                    </div>
+                    <input type="range" id="perspX" min="-45" max="45" value="0" />
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Perspective Y (Vertical)</span>
+                        <span id="perspYVal">0°</span>
+                    </div>
+                    <input type="range" id="perspY" min="-45" max="45" value="0" />
+                </div>
+
+                <!-- Enhancements -->
                 <div class="section-title">Enhancements</div>
-
                 <div class="slider-group">
                     <div class="slider-label">
                         <span>HDR Effect</span>
@@ -242,8 +97,8 @@
                     <input type="range" id="vignette" min="0" max="100" value="0" />
                 </div>
 
+                <!-- Color Adjustments -->
                 <div class="section-title">Color Adjustments</div>
-
                 <div class="slider-group">
                     <div class="slider-label">
                         <span>Brightness</span>
@@ -303,275 +158,7 @@
         </div>
     </div>
 
-    <script>
-        const canvas = document.getElementById("imageCanvas");
-        const ctx = canvas.getContext("2d");
-        const uploadInput = document.getElementById("uploadInput");
-        const downloadBtn = document.getElementById("downloadBtn");
-        const resetBtn = document.getElementById("resetBtn");
-        const dropPrompt = document.getElementById("dropPrompt");
-
-        const sliders = {
-            brightness: document.getElementById("brightness"),
-            contrast: document.getElementById("contrast"),
-            saturation: document.getElementById("saturation"),
-            grayscale: document.getElementById("grayscale"),
-            sepia: document.getElementById("sepia"),
-            hueRotate: document.getElementById("hueRotate"),
-            blur: document.getElementById("blur"),
-            hdr: document.getElementById("hdr"),
-            sharpen: document.getElementById("sharpen"),
-            vibrance: document.getElementById("vibrance"),
-            vignette: document.getElementById("vignette"),
-        };
-
-        const labels = {
-            brightness: document.getElementById("brightnessVal"),
-            contrast: document.getElementById("contrastVal"),
-            saturation: document.getElementById("saturationVal"),
-            grayscale: document.getElementById("grayscaleVal"),
-            sepia: document.getElementById("sepiaVal"),
-            hueRotate: document.getElementById("hueRotateVal"),
-            blur: document.getElementById("blurVal"),
-            hdr: document.getElementById("hdrVal"),
-            sharpen: document.getElementById("sharpenVal"),
-            vibrance: document.getElementById("vibranceVal"),
-            vignette: document.getElementById("vignetteVal"),
-        };
-
-        const defaults = {
-            brightness: 100,
-            contrast: 100,
-            saturation: 100,
-            grayscale: 0,
-            sepia: 0,
-            hueRotate: 0,
-            blur: 0,
-            hdr: 0,
-            sharpen: 0,
-            vibrance: 0,
-            vignette: 0,
-        };
-
-        let currentImg = null;
-
-        function getFilterString() {
-            return `
-                brightness(${sliders.brightness.value}%)
-                contrast(${sliders.contrast.value}%)
-                saturate(${sliders.saturation.value}%)
-                grayscale(${sliders.grayscale.value}%)
-                sepia(${sliders.sepia.value}%)
-                hue-rotate(${sliders.hueRotate.value}deg)
-                blur(${sliders.blur.value}px)
-            `.trim();
-        }
-
-        // 1. Dynamic Tone Mapping (HDR)
-        function applyHDR(data, amount) {
-            if (amount <= 0) return;
-            const factor = amount / 100;
-
-            for (let i = 0; i < data.length; i += 4) {
-                let r = data[i];
-                let g = data[i + 1];
-                let b = data[i + 2];
-
-                let lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                let shadowBoost = Math.sin((lum / 255) * Math.PI) * 70 * factor;
-
-                let boostR = r + shadowBoost;
-                let boostG = g + shadowBoost;
-                let boostB = b + shadowBoost;
-
-                let max = Math.max(r, g, b);
-                let min = Math.min(r, g, b);
-                let satFactor = (1 - (max - min) / 255) * 0.4 * factor;
-
-                data[i] = Math.min(255, Math.max(0, boostR + (boostR - lum) * satFactor));
-                data[i + 1] = Math.min(255, Math.max(0, boostG + (boostG - lum) * satFactor));
-                data[i + 2] = Math.min(255, Math.max(0, boostB + (boostB - lum) * satFactor));
-            }
-        }
-
-        // 2. Selective Vibrance
-        function applyVibrance(data, amount) {
-            if (amount === 0) return;
-            const factor = amount / 100;
-
-            for (let i = 0; i < data.length; i += 4) {
-                let r = data[i];
-                let g = data[i + 1];
-                let b = data[i + 2];
-
-                let max = Math.max(r, g, b);
-                let avg = (r + g + b) / 3;
-                let amt = ((Math.abs(max - avg) * 2) / 255) * factor;
-
-                if (factor > 0) {
-                    data[i] += (max - r) * amt;
-                    data[i + 1] += (max - g) * amt;
-                    data[i + 2] += (max - b) * amt;
-                } else {
-                    data[i] += (avg - r) * -amt;
-                    data[i + 1] += (avg - g) * -amt;
-                    data[i + 2] += (avg - b) * -amt;
-                }
-            }
-        }
-
-        // 3. Fast Edge Sharpening (Convolution Kernel)
-        function applySharpen(ctx, width, height, amount) {
-            if (amount <= 0) return;
-            const strength = (amount / 100) * 1.5;
-
-            const weights = [
-                0, -strength, 0,
-                -strength, 4 * strength + 1, -strength,
-                0, -strength, 0
-            ];
-
-            const input = ctx.getImageData(0, 0, width, height);
-            const src = input.data;
-            const output = ctx.createImageData(width, height);
-            const dst = output.data;
-
-            for (let y = 1; y < height - 1; y++) {
-                for (let x = 1; x < width - 1; x++) {
-                    let dstIdx = (y * width + x) * 4;
-                    let r = 0, g = 0, b = 0;
-
-                    for (let cy = -1; cy <= 1; cy++) {
-                        for (let cx = -1; cx <= 1; cx++) {
-                            let srcIdx = ((y + cy) * width + (x + cx)) * 4;
-                            let w = weights[(cy + 1) * 3 + (cx + 1)];
-                            r += src[srcIdx] * w;
-                            g += src[srcIdx + 1] * w;
-                            b += src[srcIdx + 2] * w;
-                        }
-                    }
-
-                    dst[dstIdx] = Math.min(255, Math.max(0, r));
-                    dst[dstIdx + 1] = Math.min(255, Math.max(0, g));
-                    dst[dstIdx + 2] = Math.min(255, Math.max(0, b));
-                    dst[dstIdx + 3] = src[dstIdx + 3];
-                }
-            }
-
-            ctx.putImageData(output, 0, 0);
-        }
-
-        // 4. Radial Vignette Overlay
-        function applyVignette(ctx, width, height, amount) {
-            if (amount <= 0) return;
-            const radius = Math.max(width, height) / 1.5;
-            const gradient = ctx.createRadialGradient(
-                width / 2, height / 2, radius * 0.4,
-                width / 2, height / 2, radius
-            );
-
-            gradient.addColorStop(0, "rgba(0,0,0,0)");
-            gradient.addColorStop(1, `rgba(0,0,0,${(amount / 100) * 0.85})`);
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-        }
-
-        // Pipeline render
-        function renderImage() {
-            if (!currentImg) return;
-
-            canvas.width = currentImg.naturalWidth;
-            canvas.height = currentImg.naturalHeight;
-
-            // Pass 1: Hardware-accelerated base filters
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.filter = getFilterString();
-            ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
-            ctx.filter = "none";
-
-            // Pass 2: Pixel-level adjustments (HDR & Vibrance)
-            const hdrVal = parseInt(sliders.hdr.value);
-            const vibranceVal = parseInt(sliders.vibrance.value);
-
-            if (hdrVal > 0 || vibranceVal !== 0) {
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                applyHDR(imgData.data, hdrVal);
-                applyVibrance(imgData.data, vibranceVal);
-                ctx.putImageData(imgData, 0, 0);
-            }
-
-            // Pass 3: Edge Sharpening
-            applySharpen(ctx, canvas.width, canvas.height, parseInt(sliders.sharpen.value));
-
-            // Pass 4: Radial Vignette
-            applyVignette(ctx, canvas.width, canvas.height, parseInt(sliders.vignette.value));
-        }
-
-        function loadImage(file) {
-            if (!file || !file.type.startsWith("image/")) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    currentImg = img;
-                    dropPrompt.style.display = "none";
-                    downloadBtn.disabled = false;
-                    resetBtn.disabled = false;
-                    renderImage();
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        Object.keys(sliders).forEach((key) => {
-            sliders[key].addEventListener("input", (e) => {
-                const val = e.target.value;
-                if (key === "hueRotate") {
-                    labels[key].innerText = `${val}°`;
-                } else if (key === "blur") {
-                    labels[key].innerText = `${val}px`;
-                } else {
-                    labels[key].innerText = `${val}%`;
-                }
-                renderImage();
-            });
-        });
-
-        uploadInput.addEventListener("change", (e) => {
-            loadImage(e.target.files[0]);
-        });
-
-        resetBtn.addEventListener("click", () => {
-            Object.keys(sliders).forEach((key) => {
-                sliders[key].value = defaults[key];
-                if (key === "hueRotate") labels[key].innerText = `${defaults[key]}°`;
-                else if (key === "blur") labels[key].innerText = `${defaults[key]}px`;
-                else labels[key].innerText = `${defaults[key]}%`;
-            });
-            renderImage();
-        });
-
-        downloadBtn.addEventListener("click", () => {
-            if (!currentImg) return;
-            const imageURL = canvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.download = "enhanced-photo.png";
-            link.href = imageURL;
-            link.click();
-        });
-
-        const wrapper = document.querySelector(".canvas-wrapper");
-        wrapper.addEventListener("dragover", (e) => e.preventDefault());
-        wrapper.addEventListener("drop", (e) => {
-            e.preventDefault();
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                loadImage(e.dataTransfer.files[0]);
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 
 </html>
